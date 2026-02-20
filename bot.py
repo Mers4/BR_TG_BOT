@@ -31,35 +31,46 @@ def load_schedule():
 
 # Получение погоды
 def get_weather():
-    """Получает текущую погоду через OpenWeatherMap API"""
-    if not WEATHER_API_KEY:
-        return "погода временно недоступна"
-    
+    """Получает текущую погоду через Open-Meteo (без API ключа)"""
     try:
-        url = f"http://api.openweathermap.org/data/2.5/weather?q={CITY}&APPID={WEATHER_API_KEY}&units=metric&lang=ru"
-        response = requests.get(url, timeout=10)
+        # Координаты Москвы (можно заменить на ваш город)
+        url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": 55.75,  # Москва
+            "longitude": 37.62,
+            "current_weather": True,
+            "timezone": "Europe/Moscow"
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
         
-        temp = data['main']['temp']
-        description = data['weather'][0]['description']
-        
-        # Определяем осадки
-        weather_main = data['weather'][0]['main'].lower()
-        if 'rain' in weather_main or 'drizzle' in weather_main:
-            precipitation = "🌧 дождь"
-        elif 'snow' in weather_main:
-            precipitation = "🌨 снег"
-        elif 'cloud' in weather_main:
-            precipitation = "☁️ облачно"
+        if 'current_weather' in data:
+            weather = data['current_weather']
+            temp = weather['temperature']
+            windspeed = weather['windspeed']
+            weather_code = weather.get('weathercode', 0)
+            
+            # Определяем погоду по коду (упрощенно)
+            if weather_code == 0:
+                condition = "☀️ ясно"
+            elif weather_code in [1, 2, 3]:
+                condition = "⛅ облачно"
+            elif weather_code in [51, 53, 55, 61, 63, 65, 80, 81, 82]:
+                condition = "🌧 дождь"
+            elif weather_code in [71, 73, 75, 85, 86]:
+                condition = "🌨 снег"
+            else:
+                condition = "🌥 облачно"
+            
+            return f"{temp:.0f}°C, {condition}"
         else:
-            precipitation = "☀️ ясно"
-        
-        return f"{temp:.0f}°C, {precipitation}"
+            return "погода временно недоступна"
+            
     except Exception as e:
         logger.error(f"Ошибка получения погоды: {e}")
         return "погода временно недоступна"
-
 # Получение расписания на сегодня
 def get_today_schedule():
     """Возвращает список предметов на сегодня"""
