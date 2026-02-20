@@ -26,6 +26,5 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           CITY: ${{ secrets.CITY }}
         run: python bot.py
